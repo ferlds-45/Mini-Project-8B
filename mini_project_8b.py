@@ -109,7 +109,7 @@ def output(data_valid, data_invalid, bulan_ke, mean, a, b):
 
     print("\nTABEL OUTPUT REGRESI DAN KLASIFIKASI (10 DATA PERTAMA)")
     print("Periode | Tahun | Bulan | Aktual     | Prediksi   | Selisih    | Kategori")
-    for baris in tabel_evaluasi[:10]:
+    for baris in tabel_evaluasi:
         print(
             f"{baris['periode']:<7} | {baris['tahun']:<5} | {baris['bulan']:<5} | "
             f"{baris['aktual']:>10,.0f} | {baris['prediksi']:>10,.2f} | "
