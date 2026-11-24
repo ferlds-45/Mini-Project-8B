@@ -22,7 +22,27 @@ def validasi(FILE_CSV):
       except ValueError, FileNotFoundError:
         pesan = "File Tidak Ditemukan : Pastikan Penulisan Nama File CSV Sudah Benar!"
   return data_valid, data_invalid
-    
+
+ def jalankan_perhitungan_utama(self, bulan_ke):
+      data_v = []
+      data_inv = 0
+      with open(self.nama_file, mode="r", encoding="utf-8") as berkas:
+          pembaca = csv.DictReader(berkas)
+          for baris in pembaca:
+              try:
+                  tahun_val = int(baris["Tahun"])
+                  bulan_val = str(baris["Bulan"]).strip()
+                  penumpang_val = float(baris["Penumpang"])
+                  if bulan_val == "" or penumpang_val < 0:
+                      data_inv += 1
+                  else:
+                      data_v.append({
+                          "Tahun": tahun_val,
+                          "Bulan": bulan_val,
+                          "Penumpang": penumpang_val })
+              except (KeyError, ValueError, TypeError):
+                    data_inv += 1
+
 #fungsi proses
 def proses(data_valid):
     x_data = []
@@ -51,6 +71,9 @@ def proses(data_valid):
   a = mean_y - (b * mean_x)
   return mean_y, a, b
 
+      mean_val, a_val, b_val = proses(data_v)
+      periode_target = float(len(data_v) + bulan_ke)
+
 #fungsi peramalan
 def peramalan(a, b, bulan_ke):
   prediksi = a + b*bulan_ke
@@ -63,7 +86,9 @@ def peramalan(a, b, bulan_ke):
         f"Prediksi bulan ke-{bulan_ke} setelah Desember 2025 adalah {prediksi:,.2f} "
         f"dengan kategori permintaan '{kategori_prediksi}'.")
   return tabel_evaluasi, kesimpulan
-  
+
+      prediksi_val = peramalan(a_val, b_val, periode_target)
+
 #fungsi output
 def kategori_permintaan(jumlah, rata_rata):
   if jumlah < rata_rata * 0.75:
@@ -90,6 +115,8 @@ def kategori_permintaan(jumlah, rata_rata):
           "selisih": selisih,
           "kategori": status })
 
+      tabel_eval, ringkasan = output(data_v, data_inv, bulan_ke, mean_val, a_val, b_val, prediksi_val)
+        
     print("\nTABEL OUTPUT REGRESI DAN KLASIFIKASI (10 DATA PERTAMA)")
     print("Periode | Tahun | Bulan | Aktual     | Prediksi   | Selisih    | Kategori")
     for baris in tabel_evaluasi[:10]:
@@ -97,6 +124,14 @@ def kategori_permintaan(jumlah, rata_rata):
               f"{baris['aktual']:>10,.0f} | {baris['prediksi']:>10,.2f} | "
               f"{baris['selisih']:>10,.2f} | {baris['kategori']}")
 
+        print("\nRINGKASAN DAN KESIMPULAN:")
+        print(ringkasan)
+        self.riwayat.append({
+            "bulan_ke": bulan_ke,
+            "prediksi": prediksi_val,
+            "ringkasan": ringkasan
+        })
+        return tabel_eval, ringkasan
 
 #Pemanggil Fungsi
 bulan_ke = (int("Masukkan Bulan ke Berapa Setelah Desember 2025 (Misalnya Januari 2026 = 1) : "
@@ -148,6 +183,5 @@ class AplikasiPenumpang:
 
             else:
                 print("Pilihan tidak valid.")
-
 
 
