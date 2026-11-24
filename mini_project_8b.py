@@ -19,9 +19,24 @@ def validasi(FILE_CSV):
       else:
         data_valid.append(row)
     return data_valid, data_invalid
-  #fungsi output
+    
+#fungsi proses
+def proses(data_valid):
+
+#fungsi output
 def output(data_valid, data_invalid, bulan_ke, mean):
-  jumlah_data = len(data_valid[Bulan])
+
+#Pemanggil Fungsi
+bulan_ke = (int("Masukkan Bulan ke Berapa Setelah Desember 2025 (Misalnya Januari 2026 = 1) : "
+data_valid, data_invalid = validasi(FILE_CSV)
+mean, a, b = proses(data_valid)
+tabel_evaluasi, prediksi, kesimpulan = output(data_valid, data_invalid, bulan_ke, mean)
+
+print(tabel_evaluasi)
+print(kesimpulan)
+print(prediksi)
+
+
   
 
 
