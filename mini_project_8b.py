@@ -55,6 +55,14 @@ def proses(data_valid):
 def peramalan(a, b, bulan_ke):
   prediksi = a + b*bulan_ke
   return prediksi
+
+  kategori_prediksi = kategori_permintaan(prediksi, mean)
+  kesimpulan = (
+        f"Data valid: {len(data_valid)}, Data invalid: {data_invalid}, "
+        f"Mean penumpang: {mean:,.2f}, Konstanta a: {a:,.4f}, Koefisien b: {b:,.4f}. "
+        f"Prediksi bulan ke-{bulan_ke} setelah Desember 2025 adalah {prediksi:,.2f} "
+        f"dengan kategori permintaan '{kategori_prediksi}'.")
+  return tabel_evaluasi, kesimpulan
   
 #fungsi output
 def kategori_permintaan(jumlah, rata_rata):
@@ -89,13 +97,6 @@ def kategori_permintaan(jumlah, rata_rata):
               f"{baris['aktual']:>10,.0f} | {baris['prediksi']:>10,.2f} | "
               f"{baris['selisih']:>10,.2f} | {baris['kategori']}")
 
-    kategori_prediksi = kategori_permintaan(prediksi, mean)
-    kesimpulan = (
-        f"Data valid: {len(data_valid)}, Data invalid: {data_invalid}, "
-        f"Mean penumpang: {mean:,.2f}, Konstanta a: {a:,.4f}, Koefisien b: {b:,.4f}. "
-        f"Prediksi bulan ke-{bulan_ke} setelah Desember 2025 adalah {prediksi:,.2f} "
-        f"dengan kategori permintaan '{kategori_prediksi}'.")
-    return tabel_evaluasi, kesimpulan
 
 #Pemanggil Fungsi
 bulan_ke = (int("Masukkan Bulan ke Berapa Setelah Desember 2025 (Misalnya Januari 2026 = 1) : "
@@ -104,10 +105,49 @@ mean, a, b = proses(data_valid)
 prediksi = peramalan(a,b)
 tabel_evaluasi, kesimpulan = output(data_valid, data_invalid, bulan_ke, mean)
 
+#Class Utama
+class AplikasiPenumpang:
+    def _init_(self, nama_file):
+        self.nama_file = nama_file
+        self.akun = {"admin": {"sandi": "1234", "peran": "Pengelola"}}
+        self.pengguna_aktif = ""
+        self.riwayat = []
+#Fungsi Registrasi
+    def registrasi_atau_login(self):
+      while True:
+          print("\nPORTAL REGISTRASI DAN LOGIN")
+          print("1. Registrasi Akun Baru")
+          print("2. Login")
+          pilih = input("Pilih (1/2): ").strip()
 
-  
+            if pilih == "1":
+                user_baru = input("Buat username baru: ").strip()
+                sandi_baru = input("Buat password baru: ").strip()
+                peran_baru = input("Peran atau unit: ").strip()
+                if peran_baru == "":
+                    peran_baru = "Pengguna"
+                if user_baru == "" or sandi_baru == "":
+                    print("Username dan password tidak boleh kosong.")
+                elif user_baru in self.akun:
+                    print("Username sudah terdaftar.")
+                else:
+                    self.akun[user_baru] = {"sandi": sandi_baru, "peran": peran_baru}
+                    self.pengguna_aktif = user_baru
+                    print("Registrasi berhasil. Akun aktif:", user_baru)
+                    break
 
+            elif pilih == "2":
+                user = input("Username: ").strip()
+                sandi = input("Password: ").strip()
+                if user in self.akun and self.akun[user]["sandi"] == sandi:
+                    self.pengguna_aktif = user
+                    print("Login berhasil. Selamat datang,", user)
+                    break
+                else:
+                    print("Username atau password salah.")
 
+            else:
+                print("Pilihan tidak valid.")
 
 
 
