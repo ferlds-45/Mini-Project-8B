@@ -38,11 +38,56 @@ mean, a, b = proses(data_valid)
 prediksi = peramalan(a,b)
 tabel_evaluasi, kesimpulan = output(data_valid, data_invalid, bulan_ke, mean)
 
-print(tabel_evaluasi)
-print(kesimpulan)
-print(prediksi)
+def proses(data_valid):
+    x_data = []
+    y_data = []
+    for i in range(len(data_valid)):
+        x_data.append(float(i + 1))
+        y_data.append(float(data_valid[i]["Penumpang"]))
 
+  if len(x_data) == 0:
+        return 0.0, 0.0, 0.0
 
+  mean_x = statistics.mean(x_data)
+  mean_x = statistics.mean(x_data)
+
+  atas = 0.0
+  bawah = 0.0
+  for i in range(len(x_data)):
+      atas += (x_data[i] - mean_x) * (y_data[i] - mean_y)
+      bawah += (x_data[i] - mean_x) ** 2            
+
+  if bawah == 0:
+      b = 0.0
+  else:
+      b = atas / bawah
+
+  a = mean_y - (b * mean_x)
+  return mean_y, a, b
   
+def kategori_permintaan(jumlah, rata_rata):
+  if jumlah < rata_rata * 0.75:
+      return "Rendah"
+  elif jumlah <= rata_rata * 1.15:
+      return "Sedang"
+  else:
+      return "Tinggi"
+
+  def output(data_valid, data_invalid, bulan_ke, mean, a, b, prediksi):
+    tabel_evaluasi = []
+    for i in range(len(data_valid)):
+      periode = float(i + 1)
+      y_aktual = float(data_valid[i]["Penumpang"])
+      y_prediksi = peramalan(a, b, periode)
+      selisih = y_aktual - y_prediksi
+      status = kategori_permintaan(y_aktual, mean)
+      tabel_evaluasi.append({
+          "periode": int(periode),
+          "tahun": data_valid[i]["Tahun"],
+          "bulan": data_valid[i]["Bulan"],
+          "aktual": y_aktual,
+          "prediksi": y_prediksi,
+          "selisih": selisih,
+          "kategori": status })
 
 
