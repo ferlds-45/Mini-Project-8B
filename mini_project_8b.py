@@ -1,6 +1,6 @@
 import csv
 import statistics
-FILE_CSV = 
+FILE_CSV = "iheq5zumsgcil03ixtjf.csv"
 def baca_validasi(FILE_CSV):
   with open ("FILE CSV", mode = "r", encoding = "utf-8") as file:
     reader = csv.DictReader(file) 
