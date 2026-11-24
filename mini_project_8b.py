@@ -82,6 +82,21 @@ def kategori_permintaan(jumlah, rata_rata):
           "selisih": selisih,
           "kategori": status })
 
+    print("\nTABEL OUTPUT REGRESI DAN KLASIFIKASI (10 DATA PERTAMA)")
+    print("Periode | Tahun | Bulan | Aktual     | Prediksi   | Selisih    | Kategori")
+    for baris in tabel_evaluasi[:10]:
+        print(f"{baris['periode']:<7} | {baris['tahun']:<5} | {baris['bulan']:<5} | "
+              f"{baris['aktual']:>10,.0f} | {baris['prediksi']:>10,.2f} | "
+              f"{baris['selisih']:>10,.2f} | {baris['kategori']}")
+
+    kategori_prediksi = kategori_permintaan(prediksi, mean)
+    kesimpulan = (
+        f"Data valid: {len(data_valid)}, Data invalid: {data_invalid}, "
+        f"Mean penumpang: {mean:,.2f}, Konstanta a: {a:,.4f}, Koefisien b: {b:,.4f}. "
+        f"Prediksi bulan ke-{bulan_ke} setelah Desember 2025 adalah {prediksi:,.2f} "
+        f"dengan kategori permintaan '{kategori_prediksi}'.")
+    return tabel_evaluasi, kesimpulan
+
 #Pemanggil Fungsi
 bulan_ke = (int("Masukkan Bulan ke Berapa Setelah Desember 2025 (Misalnya Januari 2026 = 1) : "
 data_valid, data_invalid = validasi(FILE_CSV)
