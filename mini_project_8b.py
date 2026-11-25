@@ -204,20 +204,6 @@ class AplikasiPenumpang:
         for idx, item in enumerate(self.riwayat, start=1):
             print(f"{idx}. Bulan ke-{item['bulan_ke']} -> Prediksi: {item['prediksi']:,.2f}")
 
-#Menu Test Case dan Tracing
-    def menu_tiga_pengujian_dan_review(self):
-        print("\nMENU 3 TEST CASE TRACING LOG AI DAN REVIEW")
-        uji_prediksi = peramalan(10.0, 2.0, 5.0)
-        print("Test Case 1 Prediksi (10 + 2*5 = 20):", "PASS" if uji_prediksi == 20.0 else "FAIL")
-        print(
-            "Test Case 2 Kategori (50 dari mean 100):",
-            "PASS" if kategori_permintaan(50, 100) == "Rendah" else "FAIL",
-        )
-        print(
-            "Tracing variabel: x_data menyimpan urutan bulan, y_data menyimpan jumlah penumpang, "
-            "a dan b dihitung dengan metode kuadrat terkecil."
-        )
-
     def mulai(self):
         self.registrasi_atau_login()
         self.jalankan_perhitungan_utama(1)
@@ -226,7 +212,6 @@ class AplikasiPenumpang:
             print("\n=== MENU UTAMA ===")
             print("1. Peramalan Jumlah Penumpang")
             print("2. Riwayat Peramalan dan Statistik")
-            print("3. Test Case, Tracing & Review")
             print("0. Keluar")
             pilihan = input("Pilih menu (0/1/2/3): ").strip()
 
@@ -234,8 +219,6 @@ class AplikasiPenumpang:
                 self.menu_satu_peramalan()
             elif pilihan == "2":
                 self.menu_dua_riwayat_dan_statistik()
-            elif pilihan == "3":
-                self.menu_tiga_pengujian_dan_review()
             elif pilihan == "0":
                 print("Program selesai. Terima kasih!")
                 break
