@@ -1,16 +1,17 @@
-#memasukkan library csv dan statistics
+# Memasukkan library csv dan statistics
 import csv
 import statistics
-#inisialisasisi csv dan penampung data
+
+# Nama file CSV default
 FILE_CSV = "iheq5zumsgcil03ixtjf.csv"
-data_valid = []
-data_invalid = 0
-#fungsi penyaring data
-def validasi(FILE_CSV):
+
+
+# Fungsi penyaring data
+def validasi(nama_file):
     data_v = []
     data_inv = 0
     try:
-        with open(FILE_CSV, mode="r", encoding="utf-8") as file:
+        with open(nama_file, mode="r", encoding="utf-8") as file:
             reader = csv.DictReader(file)
             for row in reader:
                 try:
@@ -40,7 +41,8 @@ def validasi(FILE_CSV):
         print("File Tidak Ditemukan : Pastikan Penulisan Nama File CSV Sudah Benar!")
     return data_v, data_inv
 
-#fungsi proses
+
+# Fungsi proses regresi linear sederhana (Y = a + bX)
 def proses(data_valid):
     x_data = []
     y_data = []
@@ -64,12 +66,13 @@ def proses(data_valid):
     a = mean_y - (b * mean_x)
     return mean_y, a, b
 
-#fungsi peramalan
-def peramalan(a, b, bulan_ke):
-    prediksi = a + b * bulan_ke
-    return prediksi
 
-#fungsi output
+# Fungsi peramalan
+def peramalan(a, b, periode_ke):
+    return a + b * periode_ke
+
+
+# Fungsi klasifikasi permintaan
 def kategori_permintaan(jumlah, rata_rata):
     if jumlah < rata_rata * 0.75:
         return "Rendah"
@@ -78,6 +81,8 @@ def kategori_permintaan(jumlah, rata_rata):
     else:
         return "Tinggi"
 
+
+# Fungsi output
 def output(data_valid, data_invalid, bulan_ke, mean, a, b):
     periode_target = float(len(data_valid) + bulan_ke)
     prediksi = peramalan(a, b, periode_target)
@@ -107,7 +112,7 @@ def output(data_valid, data_invalid, bulan_ke, mean, a, b):
         f"dengan kategori permintaan '{kategori_prediksi}'."
     )
 
-    print("\nTABEL OUTPUT REGRESI DAN KLASIFIKASI (10 DATA PERTAMA)")
+    print("\nTABEL OUTPUT REGRESI DAN KLASIFIKASI")
     print("Periode | Tahun | Bulan | Aktual     | Prediksi   | Selisih    | Kategori")
     for baris in tabel_evaluasi:
         print(
@@ -120,7 +125,8 @@ def output(data_valid, data_invalid, bulan_ke, mean, a, b):
     print(kesimpulan)
     return tabel_evaluasi, kesimpulan, prediksi
 
-#Class Utama
+
+# Class Utama
 class AplikasiPenumpang:
     def __init__(self, nama_file):
         self.nama_file = nama_file
@@ -128,7 +134,7 @@ class AplikasiPenumpang:
         self.pengguna_aktif = ""
         self.riwayat = []
 
-#Fungsi Registrasi
+    # Portal Registrasi dan Login
     def registrasi_atau_login(self):
         while True:
             print("\nPORTAL REGISTRASI DAN LOGIN")
@@ -176,13 +182,14 @@ class AplikasiPenumpang:
             data_v, data_inv, bulan_ke, mean_val, a_val, b_val
         )
         self.riwayat.append({
+            "pengguna": self.pengguna_aktif,
             "bulan_ke": bulan_ke,
             "prediksi": prediksi_val,
             "ringkasan": ringkasan,
         })
         return tabel_eval, ringkasan
 
-#Menu Peramalan Penumpang
+    # Menu 1: Peramalan Penumpang
     def menu_satu_peramalan(self):
         print("\nMENU 1 PERAMALAN PENUMPANG")
         try:
@@ -196,36 +203,52 @@ class AplikasiPenumpang:
         except ValueError:
             print("Input harus berupa angka bulat.")
 
-#Menu Riwayat Peramalan dan Statistik
+    # Menu 2: Riwayat Peramalan dan Statistik
     def menu_dua_riwayat_dan_statistik(self):
         print("\nMENU 2 RIWAYAT PERAMALAN DAN STATISTIK")
         print("Pengguna aktif:", self.pengguna_aktif)
         print("Jumlah riwayat prediksi:", len(self.riwayat))
         for idx, item in enumerate(self.riwayat, start=1):
-            print(f"{idx}. Bulan ke-{item['bulan_ke']} -> Prediksi: {item['prediksi']:,.2f}")
+            print(
+                f"{idx}. [{item['pengguna']}] Bulan ke-{item['bulan_ke']} -> "
+                f"Prediksi: {item['prediksi']:,.2f}"
+            )
 
     def mulai(self):
-        self.registrasi_atau_login()
-        self.jalankan_perhitungan_utama(1)
-
         while True:
-            print("\n=== MENU UTAMA ===")
-            print("1. Peramalan Jumlah Penumpang")
-            print("2. Riwayat Peramalan dan Statistik")
-            print("0. Keluar")
-            pilihan = input("Pilih menu (0/1/2/3): ").strip()
+            self.registrasi_atau_login()
+            self.jalankan_perhitungan_utama(1)
 
-            if pilihan == "1":
-                self.menu_satu_peramalan()
-            elif pilihan == "2":
-                self.menu_dua_riwayat_dan_statistik()
-            elif pilihan == "0":
-                print("Program selesai. Terima kasih!")
-                break
-            else:
-                print("Pilihan tidak valid.")
+            while True:
+                print("\n=== MENU UTAMA ===")
+                print("1. Peramalan Jumlah Penumpang")
+                print("2. Riwayat Peramalan dan Statistik")
+                print("0. Keluar")
+                pilihan = input("Pilih menu (0/1/2): ").strip()
 
-#Pemanggil Fungsi
+                if pilihan == "1":
+                    self.menu_satu_peramalan()
+                elif pilihan == "2":
+                    self.menu_dua_riwayat_dan_statistik()
+                elif pilihan == "0":
+                    print("\nAnda keluar dari sesi akun:", self.pengguna_aktif)
+                    print("1. Kembali ke Portal Registrasi / Login")
+                    print("2. Tutup Program")
+                    opsi_keluar = input("Pilih (1/2): ").strip()
+
+                    if opsi_keluar == "1":
+                        self.pengguna_aktif = ""
+                        break
+                    elif opsi_keluar == "2":
+                        print("Program selesai. Terima kasih!")
+                        return
+                    else:
+                        print("Pilihan tidak valid, kembali ke Menu Utama.")
+                else:
+                    print("Pilihan tidak valid.")
+
+
+# Pemanggil Fungsi
 if __name__ == "__main__":
     aplikasi = AplikasiPenumpang(FILE_CSV)
     aplikasi.mulai()
