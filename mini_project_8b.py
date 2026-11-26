@@ -247,11 +247,24 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
 
 # Class Utama
 class AplikasiPenumpang:
-    def __init__(self, nama_file):
+    def _init_(self, nama_file):
         self.nama_file = nama_file
-        self.akun = {"admin": {"sandi": "1234", "peran": "Pengelola"}}
+        self.akun = {
+            "admin": {"sandi": "1234", "peran": "Pengelola"},
+        }
         self.pengguna_aktif = ""
-        self.riwayat = []
+        self.peran_aktif = ""
+        self.riwayat_penggunaan = []
+
+    def catat_riwayat(self, aktivitas, detail=""):
+        waktu = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.riwayat_penggunaan.append({
+            "waktu": waktu,
+            "pengguna": self.pengguna_aktif or "Anonim",
+            "peran": self.peran_aktif or "-",
+            "aktivitas": aktivitas,
+            "detail": detail,
+        })
 
     # Portal Registrasi dan Login
     def registrasi_atau_login(self):
