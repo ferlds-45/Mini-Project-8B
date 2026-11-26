@@ -1,4 +1,3 @@
-# Memasukkan library csv dan statistics
 import csv
 import datetime
 import statistics
@@ -18,6 +17,7 @@ REFERENSI_ERROR = {
         "MAPE": 0.055349,
     },
 }
+
 
 # Fungsi penyaring data
 def validasi(nama_file):
@@ -54,6 +54,7 @@ def validasi(nama_file):
         print("File Tidak Ditemukan : Pastikan Penulisan Nama File CSV Sudah Benar!")
     return data_v, data_inv
 
+
 def kategori_permintaan(jumlah, rata_rata):
     if jumlah < rata_rata * 0.75:
         return "Rendah"
@@ -61,6 +62,7 @@ def kategori_permintaan(jumlah, rata_rata):
         return "Sedang"
     else:
         return "Tinggi"
+
 
 def saran_kuota_kursi(aktual, rata_rata, kategori):
     if kategori == "Tinggi" or aktual > rata_rata * 1.15:
@@ -71,8 +73,7 @@ def saran_kuota_kursi(aktual, rata_rata, kategori):
         return "AMAN: Permintaan penumpang stabil, pertahankan kuota kursi sesuai jadwal reguler."
 
 
-
-# Fungsi gabungan: proses regresi + peramalan + output
+# Fungsi proses regresi dan evaluasi error
 def hitung_regresi(x_data, y_data):
     mean_x = statistics.mean(x_data)
     mean_y = statistics.mean(y_data)
@@ -83,6 +84,7 @@ def hitung_regresi(x_data, y_data):
     b = (atas / bawah) if bawah != 0 else 0.0
     a = mean_y - (b * mean_x)
     return mean_x, mean_y, a, b
+
 
 def evaluasi_error_regresi(y_data, a, b):
     abs_errors = []
@@ -107,6 +109,7 @@ def evaluasi_error_regresi(y_data, a, b):
     mape = statistics.mean(pct_errors) if pct_errors else 0.0
     return prediksi_list, mad, mse, mape
 
+
 def evaluasi_moving_average_3_bulan(y_data):
     forecast_list = [None] * len(y_data)
     abs_errors = []
@@ -130,6 +133,7 @@ def evaluasi_moving_average_3_bulan(y_data):
     mse = statistics.mean(sq_errors) if sq_errors else 0.0
     mape = statistics.mean(pct_errors) if pct_errors else 0.0
     return forecast_list, mad, mse, mape
+
 
 def proses_evaluasi_dan_output(data_valid, data_invalid):
     x_data = [float(i + 1) for i in range(len(data_valid))]
@@ -166,37 +170,6 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
             "peringatan_kuota": peringatan,
         })
 
-
-    # Peramalan periode target
-    periode_target = float(len(data_valid) + bulan_ke)
-    prediksi = a + b * periode_target
-    kategori_prediksi = kategori_permintaan(prediksi, mean_y)
-
-    # Evaluasi data historis
-    tabel_evaluasi = []
-    for i in range(len(data_valid)):
-        periode = float(i + 1)
-        y_aktual = float(data_valid[i]["Penumpang"])
-        y_prediksi = a + b * periode
-        selisih = y_aktual - y_prediksi
-        status = kategori_permintaan(y_aktual, mean_y)
-        tabel_evaluasi.append({
-            "periode": int(periode),
-            "tahun": data_valid[i]["Tahun"],
-            "bulan": data_valid[i]["Bulan"],
-            "aktual": y_aktual,
-            "prediksi": y_prediksi,
-            "selisih": selisih,
-            "kategori": status,
-        })
-
-    kesimpulan = (
-        f"Data valid: {len(data_valid)}, Data invalid: {data_invalid}, "
-        f"Mean penumpang: {mean_y:,.2f}, Konstanta a: {a:,.4f}, Koefisien b: {b:,.4f}. "
-        f"Prediksi bulan ke-{bulan_ke} setelah Desember 2025 adalah {prediksi:,.2f} "
-        f"dengan kategori permintaan '{kategori_prediksi}'."
-    )
-
     print("\nTABEL EVALUASI ERROR")
     print(
         "Per | Tahun | Bulan | Aktual     | Regresi    | MA-3 Bln   | Kategori | Peringatan / Saran Kuota Kursi"
@@ -210,7 +183,7 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
             f"{ma_str} | {row['kategori']:<8} | {row['peringatan_kuota']}"
         )
 
-    metode_terbaik = ("Regresi Linear" if mad_reg < mad_ma3 else "Moving Average 3 Bulan")
+    metode_terbaik = "Regresi Linear" if mad_reg < mad_ma3 else "Moving Average 3 Bulan"
 
     print("\nRINGKASAN EVALUASI ERROR (MAD, MSE, MAPE)")
     print(f"Data Valid: {len(data_valid)} | Data Invalid: {data_invalid} | Mean Penumpang: {mean_y:,.2f}")
@@ -245,9 +218,10 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
         "kesimpulan": kesimpulan,
     }
 
+
 # Class Utama
 class AplikasiPenumpang:
-    def _init_(self, nama_file):
+    def __init__(self, nama_file):
         self.nama_file = nama_file
         self.akun = {
             "admin": {"sandi": "1234", "peran": "Pengelola"},
@@ -366,6 +340,7 @@ class AplikasiPenumpang:
                         print("Pilihan tidak valid, kembali ke Menu Utama.")
                 else:
                     print("Pilihan tidak valid.")
+
 
 # Pemanggil Fungsi
 if __name__ == "__main__":
