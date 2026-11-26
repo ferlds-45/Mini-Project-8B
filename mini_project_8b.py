@@ -131,6 +131,27 @@ def evaluasi_moving_average_3_bulan(y_data):
     mape = statistics.mean(pct_errors) if pct_errors else 0.0
     return forecast_list, mad, mse, mape
 
+def proses_evaluasi_dan_output(data_valid, data_invalid):
+    x_data = [float(i + 1) for i in range(len(data_valid))]
+    y_data = [float(item["Penumpang"]) for item in data_valid]
+
+    if not y_data:
+        print("Tidak ada data valid untuk diproses.")
+        return None
+
+    _, mean_y, a, b = hitung_regresi(x_data, y_data)
+    pred_regresi, mad_reg, mse_reg, mape_reg = evaluasi_error_regresi(y_data, a, b)
+    ma3_forecast, mad_ma3, mse_ma3, mape_ma3 = evaluasi_moving_average_3_bulan(y_data)
+
+    tabel_evaluasi = []
+    for i in range(len(data_valid)):
+        aktual = y_data[i]
+        reg_val = pred_regresi[i]
+        ma_val = ma3_forecast[i]
+        selisih_reg = aktual - reg_val
+        selisih_ma = (aktual - ma_val) if ma_val is not None else None
+        kategori = kategori_permintaan(aktual, mean_y)
+        peringatan = saran_kuota_kursi(aktual, mean_y, kategori)
 
 
     # Peramalan periode target
