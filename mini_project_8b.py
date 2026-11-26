@@ -231,7 +231,7 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
     }
 
 # Class Utama
-class AplikasiPenumpang:
+class AplikasiFluktasiPenumpang:
     def __init__(self, nama_file):
         self.nama_file = nama_file
         self.akun = {
@@ -383,5 +383,5 @@ class AplikasiPenumpang:
 
 # Pemanggil Fungsi
 if __name__ == "__main__":
-    aplikasi = AplikasiPenumpang(FILE_CSV)
+    aplikasi = AplikasiFluktasiPenumpang(FILE_CSV)
     aplikasi.mulai()
