@@ -345,7 +345,6 @@ class AplikasiFluktasiPenumpang:
     def mulai(self):
         while True:
             self.registrasi_atau_login()
-            self.jalankan_evaluasi()
 
             while True:
                 print("\n=== MENU UTAMA ===")
