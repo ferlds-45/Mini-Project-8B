@@ -153,6 +153,19 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
         kategori = kategori_permintaan(aktual, mean_y)
         peringatan = saran_kuota_kursi(aktual, mean_y, kategori)
 
+        tabel_evaluasi.append({
+            "periode": i + 1,
+            "tahun": data_valid[i]["Tahun"],
+            "bulan": data_valid[i]["Bulan"],
+            "aktual": aktual,
+            "regresi": reg_val,
+            "selisih_reg": selisih_reg,
+            "ma_3": ma_val,
+            "selisih_ma": selisih_ma,
+            "kategori": kategori,
+            "peringatan_kuota": peringatan,
+        })
+
 
     # Peramalan periode target
     periode_target = float(len(data_valid) + bulan_ke)
