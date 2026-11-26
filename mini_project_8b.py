@@ -1,10 +1,23 @@
 # Memasukkan library csv dan statistics
 import csv
+import datetime
 import statistics
 
 # Nama file CSV default
 FILE_CSV = "iheq5zumsgcil03ixtjf.csv"
 
+REFERENSI_ERROR = {
+    "Moving Average 3 Bulan": {
+        "MAD": 435.0,
+        "MSE": 317750.2,
+        "MAPE": 0.060121,
+    },
+    "Exponential Smoothing alpha=0.6": {
+        "MAD": 387.163,
+        "MSE": 261914.1,
+        "MAPE": 0.055349,
+    },
+}
 
 # Fungsi penyaring data
 def validasi(nama_file):
@@ -163,7 +176,7 @@ class AplikasiPenumpang:
 
     def jalankan_perhitungan_utama(self, bulan_ke):
         data_v, data_inv = validasi(self.nama_file)
-            if len(data_v) == 0:
+        if len(data_v) == 0:
                 print("Tidak ada data valid untuk diproses.")
                 return
 
