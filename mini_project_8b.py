@@ -197,18 +197,35 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
         f"dengan kategori permintaan '{kategori_prediksi}'."
     )
 
-    print("\nTABEL OUTPUT REGRESI DAN KLASIFIKASI")
-    print("Periode | Tahun | Bulan | Aktual     | Prediksi   | Selisih    | Kategori")
-    for baris in tabel_evaluasi:
+    print("\nTABEL EVALUASI ERROR")
+    print(
+        "Per | Tahun | Bulan | Aktual     | Regresi    | MA-3 Bln   | Kategori | Peringatan / Saran Kuota Kursi"
+    )
+    print("-" * 125)
+    for row in tabel_evaluasi:
+        ma_str = f"{row['ma_3']:>10,.2f}" if row["ma_3"] is not None else f"{'N/A':>10}"
         print(
-            f"{baris['periode']:<7} | {baris['tahun']:<5} | {baris['bulan']:<5} | "
-            f"{baris['aktual']:>10,.0f} | {baris['prediksi']:>10,.2f} | "
-            f"{baris['selisih']:>10,.2f} | {baris['kategori']}"
+            f"{row['periode']:<3} | {row['tahun']:<5} | {row['bulan']:<5} | "
+            f"{row['aktual']:>10,.0f} | {row['regresi']:>10,.2f} | "
+            f"{ma_str} | {row['kategori']:<8} | {row['peringatan_kuota']}"
         )
 
-    print("\nRINGKASAN DAN KESIMPULAN:")
-    print(kesimpulan)
-    return tabel_evaluasi, kesimpulan, prediksi
+    metode_terbaik = ("Regresi Linear" if mad_reg < mad_ma3 else "Moving Average 3 Bulan")
+
+    print("\nRINGKASAN EVALUASI ERROR (MAD, MSE, MAPE)")
+    print(f"Data Valid: {len(data_valid)} | Data Invalid: {data_invalid} | Mean Penumpang: {mean_y:,.2f}")
+    print(f"Persamaan Regresi: Y = {a:,.4f} + ({b:,.4f})X")
+    print("-" * 88)
+    print(f"{'Metode Evaluasi':<42} | {'MAD':>12} | {'MSE':>14} | {'MAPE':>10}")
+    print("-" * 88)
+    print(f"{'Regresi Linear':<42} | {mad_reg:>12,.3f} | {mse_reg:>14,.2f} | {mape_reg:>10.6f}")
+    print(f"{'Moving Average 3 Bulan':<42} | {mad_ma3:>12,.3f} | {mse_ma3:>14,.2f} | {mape_ma3:>10.6f}")
+    for nama_metode, metrik in REFERENSI_ERROR.items():
+        print(
+            f"{nama_metode:<42} | {metrik['MAD']:>12,.3f} | "
+            f"{metrik['MSE']:>14,.2f} | {metrik['MAPE']:>10.6f}"
+        )
+    print("-" * 88)
 
 # Class Utama
 class AplikasiPenumpang:
