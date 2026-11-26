@@ -41,38 +41,6 @@ def validasi(nama_file):
         print("File Tidak Ditemukan : Pastikan Penulisan Nama File CSV Sudah Benar!")
     return data_v, data_inv
 
-
-# Fungsi proses regresi linear sederhana (Y = a + bX)
-def proses(data_valid):
-    x_data = []
-    y_data = []
-    for i in range(len(data_valid)):
-        x_data.append(float(i + 1))
-        y_data.append(float(data_valid[i]["Penumpang"]))
-
-    if len(x_data) == 0:
-        return 0.0, 0.0, 0.0
-
-    mean_x = statistics.mean(x_data)
-    mean_y = statistics.mean(y_data)
-
-    atas = 0.0
-    bawah = 0.0
-    for i in range(len(x_data)):
-        atas += (x_data[i] - mean_x) * (y_data[i] - mean_y)
-        bawah += (x_data[i] - mean_x) ** 2
-
-    b = (atas / bawah) if bawah != 0 else 0.0
-    a = mean_y - (b * mean_x)
-    return mean_y, a, b
-
-
-# Fungsi peramalan
-def peramalan(a, b, periode_ke):
-    return a + b * periode_ke
-
-
-# Fungsi klasifikasi permintaan
 def kategori_permintaan(jumlah, rata_rata):
     if jumlah < rata_rata * 0.75:
         return "Rendah"
@@ -82,19 +50,42 @@ def kategori_permintaan(jumlah, rata_rata):
         return "Tinggi"
 
 
-# Fungsi output
-def output(data_valid, data_invalid, bulan_ke, mean, a, b):
-    periode_target = float(len(data_valid) + bulan_ke)
-    prediksi = peramalan(a, b, periode_target)
-    kategori_prediksi = kategori_permintaan(prediksi, mean)
+# Fungsi gabungan: proses regresi + peramalan + output
+def proses_peramalan_output(data_valid, data_invalid, bulan_ke):
+    x_data = []
+    y_data = []
+    for i in range(len(data_valid)):
+        x_data.append(float(i + 1))
+        y_data.append(float(data_valid[i]["Penumpang"]))
 
+    if len(x_data) == 0:
+        return [], "Tidak ada data valid untuk diproses.", 0.0
+
+    mean_y = statistics.mean(y_data)
+    mean_x = statistics.mean(x_data)
+
+    atas = 0.0
+    bawah = 0.0
+    for i in range(len(x_data)):
+        atas += (x_data[i] - mean_x) * (y_data[i] - mean_y)
+        bawah += (x_data[i] - mean_x) ** 2
+
+    b = (atas / bawah) if bawah != 0 else 0.0
+    a = mean_y - (b * mean_x)
+
+    # Peramalan periode target
+    periode_target = float(len(data_valid) + bulan_ke)
+    prediksi = a + b * periode_target
+    kategori_prediksi = kategori_permintaan(prediksi, mean_y)
+
+    # Evaluasi data historis
     tabel_evaluasi = []
     for i in range(len(data_valid)):
         periode = float(i + 1)
         y_aktual = float(data_valid[i]["Penumpang"])
-        y_prediksi = peramalan(a, b, periode)
+        y_prediksi = a + b * periode
         selisih = y_aktual - y_prediksi
-        status = kategori_permintaan(y_aktual, mean)
+        status = kategori_permintaan(y_aktual, mean_y)
         tabel_evaluasi.append({
             "periode": int(periode),
             "tahun": data_valid[i]["Tahun"],
@@ -107,7 +98,7 @@ def output(data_valid, data_invalid, bulan_ke, mean, a, b):
 
     kesimpulan = (
         f"Data valid: {len(data_valid)}, Data invalid: {data_invalid}, "
-        f"Mean penumpang: {mean:,.2f}, Konstanta a: {a:,.4f}, Koefisien b: {b:,.4f}. "
+        f"Mean penumpang: {mean_y:,.2f}, Konstanta a: {a:,.4f}, Koefisien b: {b:,.4f}. "
         f"Prediksi bulan ke-{bulan_ke} setelah Desember 2025 adalah {prediksi:,.2f} "
         f"dengan kategori permintaan '{kategori_prediksi}'."
     )
@@ -124,7 +115,6 @@ def output(data_valid, data_invalid, bulan_ke, mean, a, b):
     print("\nRINGKASAN DAN KESIMPULAN:")
     print(kesimpulan)
     return tabel_evaluasi, kesimpulan, prediksi
-
 
 # Class Utama
 class AplikasiPenumpang:
@@ -171,15 +161,14 @@ class AplikasiPenumpang:
             else:
                 print("Pilihan tidak valid.")
 
-    def jalankan_perhitungan_utama(self, bulan_ke):
+       def jalankan_perhitungan_utama(self, bulan_ke):
         data_v, data_inv = validasi(self.nama_file)
         if len(data_v) == 0:
             print("Tidak ada data valid untuk diproses.")
             return
 
-        mean_val, a_val, b_val = proses(data_v)
-        tabel_eval, ringkasan, prediksi_val = output(
-            data_v, data_inv, bulan_ke, mean_val, a_val, b_val
+        tabel_eval, ringkasan, prediksi_val = proses_peramalan_output(
+            data_v, data_inv, bulan_ke
         )
         self.riwayat.append({
             "pengguna": self.pengguna_aktif,
