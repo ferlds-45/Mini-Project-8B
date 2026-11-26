@@ -2,7 +2,6 @@ import csv
 import datetime
 import statistics
 
-# Nama file CSV default
 FILE_CSV = "iheq5zumsgcil03ixtjf.csv"
 
 REFERENSI_ERROR = {
@@ -19,7 +18,6 @@ REFERENSI_ERROR = {
 }
 
 
-# Fungsi penyaring data
 def validasi(nama_file):
     data_v = []
     data_inv = 0
@@ -73,7 +71,6 @@ def saran_kuota_kursi(aktual, rata_rata, kategori):
         return "AMAN: Permintaan penumpang stabil, pertahankan kuota kursi sesuai jadwal reguler."
 
 
-# Fungsi proses regresi dan evaluasi error
 def hitung_regresi(x_data, y_data):
     mean_x = statistics.mean(x_data)
     mean_y = statistics.mean(y_data)
@@ -219,7 +216,6 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
     }
 
 
-# Class Utama
 class AplikasiPenumpang:
     def __init__(self, nama_file):
         self.nama_file = nama_file
@@ -240,7 +236,6 @@ class AplikasiPenumpang:
             "detail": detail,
         })
 
-    # Portal Registrasi dan Login
     def registrasi_atau_login(self):
         while True:
             print("\nPORTAL REGISTRASI DAN LOGIN")
@@ -342,7 +337,6 @@ class AplikasiPenumpang:
                     print("Pilihan tidak valid.")
 
 
-# Pemanggil Fungsi
 if __name__ == "__main__":
     aplikasi = AplikasiPenumpang(FILE_CSV)
     aplikasi.mulai()
