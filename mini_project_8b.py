@@ -227,6 +227,24 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
         )
     print("-" * 88)
 
+    kesimpulan = (
+        f"Hasil evaluasi error menunjukkan {metode_terbaik} memiliki MAD lebih kecil pada data ini "
+        f"(MAD Regresi: {mad_reg:,.3f} dibandingkan MAD Moving Average 3 Bulan: {mad_ma3:,.3f}). "
+        f"Sebagai perbandingan literatur, Moving Average 3 bulan memiliki MAD 435,000 dan "
+        f"Exponential Smoothing (alpha=0,6) memiliki MAD 387,163. "
+        f"Gunakan baris berstatus 'Tinggi' sebagai acuan penambahan kuota kursi dan 'Rendah' untuk penyesuaian kapasitas."
+    )
+    print("\nKESIMPULAN DAN SARAN KUOTA PENUMPANG:")
+    print(kesimpulan)
+
+    return {
+        "tabel": tabel_evaluasi,
+        "mad_regresi": mad_reg,
+        "mad_ma3": mad_ma3,
+        "metode_terbaik": metode_terbaik,
+        "kesimpulan": kesimpulan,
+    }
+
 # Class Utama
 class AplikasiPenumpang:
     def __init__(self, nama_file):
