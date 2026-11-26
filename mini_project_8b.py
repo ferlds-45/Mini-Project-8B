@@ -70,28 +70,68 @@ def saran_kuota_kursi(aktual, rata_rata, kategori):
     else:
         return "AMAN: Permintaan penumpang stabil, pertahankan kuota kursi sesuai jadwal reguler."
 
+
+
 # Fungsi gabungan: proses regresi + peramalan + output
-def proses_peramalan_output(data_valid, data_invalid, bulan_ke):
-    x_data = []
-    y_data = []
-    for i in range(len(data_valid)):
-        x_data.append(float(i + 1))
-        y_data.append(float(data_valid[i]["Penumpang"]))
-
-    if len(x_data) == 0:
-        return [], "Tidak ada data valid untuk diproses.", 0.0
-
-    mean_y = statistics.mean(y_data)
+def hitung_regresi(x_data, y_data):
     mean_x = statistics.mean(x_data)
+    mean_y = statistics.mean(y_data)
 
-    atas = 0.0
-    bawah = 0.0
-    for i in range(len(x_data)):
-        atas += (x_data[i] - mean_x) * (y_data[i] - mean_y)
-        bawah += (x_data[i] - mean_x) ** 2
+    atas = sum((x_data[i] - mean_x) * (y_data[i] - mean_y) for i in range(len(x_data)))
+    bawah = sum((x_data[i] - mean_x) ** 2 for i in range(len(x_data)))
 
     b = (atas / bawah) if bawah != 0 else 0.0
     a = mean_y - (b * mean_x)
+    return mean_x, mean_y, a, b
+
+def evaluasi_error_regresi(y_data, a, b):
+    abs_errors = []
+    sq_errors = []
+    pct_errors = []
+    prediksi_list = []
+
+    for i in range(len(y_data)):
+        periode = float(i + 1)
+        aktual = y_data[i]
+        pred = a + b * periode
+        prediksi_list.append(pred)
+
+        err_abs = abs(aktual - pred)
+        abs_errors.append(err_abs)
+        sq_errors.append((aktual - pred) ** 2)
+        if aktual != 0:
+            pct_errors.append(err_abs / aktual)
+
+    mad = statistics.mean(abs_errors) if abs_errors else 0.0
+    mse = statistics.mean(sq_errors) if sq_errors else 0.0
+    mape = statistics.mean(pct_errors) if pct_errors else 0.0
+    return prediksi_list, mad, mse, mape
+
+def evaluasi_moving_average_3_bulan(y_data):
+    forecast_list = [None] * len(y_data)
+    abs_errors = []
+    sq_errors = []
+    pct_errors = []
+
+    for i in range(len(y_data)):
+        if i >= 3:
+            jumlah_3_bulan = y_data[i - 3] + y_data[i - 2] + y_data[i - 1]
+            ma_3 = jumlah_3_bulan / 3.0
+            forecast_list[i] = ma_3
+
+            aktual = y_data[i]
+            err_abs = abs(aktual - ma_3)
+            abs_errors.append(err_abs)
+            sq_errors.append((aktual - ma_3) ** 2)
+            if aktual != 0:
+                pct_errors.append(err_abs / aktual)
+
+    mad = statistics.mean(abs_errors) if abs_errors else 0.0
+    mse = statistics.mean(sq_errors) if sq_errors else 0.0
+    mape = statistics.mean(pct_errors) if pct_errors else 0.0
+    return forecast_list, mad, mse, mape
+
+
 
     # Peramalan periode target
     periode_target = float(len(data_valid) + bulan_ke)
