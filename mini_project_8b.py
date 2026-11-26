@@ -62,6 +62,13 @@ def kategori_permintaan(jumlah, rata_rata):
     else:
         return "Tinggi"
 
+def saran_kuota_kursi(aktual, rata_rata, kategori):
+    if kategori == "Tinggi" or aktual > rata_rata * 1.15:
+        return "PERINGATAN: Jumlah penumpang melonjak! Tambah kuota kursi untuk mencukupi permintaan penumpang."
+    elif kategori == "Rendah" or aktual < rata_rata * 0.75:
+        return "SARAN: Permintaan penumpang rendah, sesuaikan kuota kursi agar kapasitas tidak berlebih."
+    else:
+        return "AMAN: Permintaan penumpang stabil, pertahankan kuota kursi sesuai jadwal reguler."
 
 # Fungsi gabungan: proses regresi + peramalan + output
 def proses_peramalan_output(data_valid, data_invalid, bulan_ke):
