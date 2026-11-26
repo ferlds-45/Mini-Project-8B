@@ -8,9 +8,7 @@ Program berbasis Python untuk mengevaluasi tingkat permintaan layanan penumpang 
 ## Struktur Repositori
 
 - `mini_project_8b.py` — Skrip utama aplikasi yang menangani alur registrasi/login, pemrosesan data CSV, perhitungan regresi, dan analisis fluktuasi MAD.
-
-
-## Cara Menjalankan Program
+- `iheq5zumsgcil03ixtjf.csv` — Dataset data penumpang/permintaan layanan kereta api yang dianalisis.
 
 1. **Clone repositori** ke komputer lokal:
    ```bash
