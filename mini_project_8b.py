@@ -161,11 +161,11 @@ class AplikasiPenumpang:
             else:
                 print("Pilihan tidak valid.")
 
-       def jalankan_perhitungan_utama(self, bulan_ke):
+    def jalankan_perhitungan_utama(self, bulan_ke):
         data_v, data_inv = validasi(self.nama_file)
-        if len(data_v) == 0:
-            print("Tidak ada data valid untuk diproses.")
-            return
+            if len(data_v) == 0:
+                print("Tidak ada data valid untuk diproses.")
+                return
 
         tabel_eval, ringkasan, prediksi_val = proses_peramalan_output(
             data_v, data_inv, bulan_ke
