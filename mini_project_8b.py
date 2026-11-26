@@ -18,7 +18,6 @@ REFERENSI_ERROR = {
     },
 }
 
-
 # Fungsi penyaring data
 def validasi(nama_file):
     data_v = []
@@ -54,7 +53,6 @@ def validasi(nama_file):
         print("File Tidak Ditemukan : Pastikan Penulisan Nama File CSV Sudah Benar!")
     return data_v, data_inv
 
-
 def kategori_permintaan(jumlah, rata_rata):
     if jumlah < rata_rata * 0.75:
         return "Rendah"
@@ -62,7 +60,6 @@ def kategori_permintaan(jumlah, rata_rata):
         return "Sedang"
     else:
         return "Tinggi"
-
 
 def saran_kuota_kursi(aktual, rata_rata, kategori):
     if kategori == "Tinggi" or aktual > rata_rata * 1.15:
@@ -72,8 +69,7 @@ def saran_kuota_kursi(aktual, rata_rata, kategori):
     else:
         return "AMAN: Permintaan penumpang stabil, pertahankan kuota kursi sesuai jadwal reguler."
 
-
-# Fungsi proses regresi dan evaluasi error
+# Fungsi proses regresi, peramalan bulan ke-X, dan evaluasi error
 def hitung_regresi(x_data, y_data):
     mean_x = statistics.mean(x_data)
     mean_y = statistics.mean(y_data)
@@ -85,6 +81,24 @@ def hitung_regresi(x_data, y_data):
     a = mean_y - (b * mean_x)
     return mean_x, mean_y, a, b
 
+def ramalkan_bulan_ke(data_valid, bulan_ke):
+    x_data = [float(i + 1) for i in range(len(data_valid))]
+    y_data = [float(item["Penumpang"]) for item in data_valid]
+
+    if not y_data:
+        return None
+
+    _, mean_y, a, b = hitung_regresi(x_data, y_data)
+    periode_target = float(len(data_valid) + bulan_ke)
+    prediksi = a + b * periode_target
+    kategori = kategori_permintaan(prediksi, mean_y)
+
+    return {
+        "bulan_ke": bulan_ke,
+        "periode_target": int(periode_target),
+        "prediksi": prediksi,
+        "kategori": kategori,
+    }
 
 def evaluasi_error_regresi(y_data, a, b):
     abs_errors = []
@@ -109,7 +123,6 @@ def evaluasi_error_regresi(y_data, a, b):
     mape = statistics.mean(pct_errors) if pct_errors else 0.0
     return prediksi_list, mad, mse, mape
 
-
 def evaluasi_moving_average_3_bulan(y_data):
     forecast_list = [None] * len(y_data)
     abs_errors = []
@@ -133,7 +146,6 @@ def evaluasi_moving_average_3_bulan(y_data):
     mse = statistics.mean(sq_errors) if sq_errors else 0.0
     mape = statistics.mean(pct_errors) if pct_errors else 0.0
     return forecast_list, mad, mse, mape
-
 
 def proses_evaluasi_dan_output(data_valid, data_invalid):
     x_data = [float(i + 1) for i in range(len(data_valid))]
@@ -172,7 +184,7 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
 
     print("\nTABEL EVALUASI ERROR")
     print(
-        "Per | Tahun | Bulan | Aktual     | Regresi    | MA-3 Bulan   | Kategori | Peringatan / Saran Kuota Kursi"
+        "Per | Tahun | Bulan | Aktual     | Regresi    | MA-3 Bln   | Kategori | Peringatan / Saran Kuota Kursi"
     )
     print("-" * 125)
     for row in tabel_evaluasi:
@@ -217,7 +229,6 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
         "metode_terbaik": metode_terbaik,
         "kesimpulan": kesimpulan,
     }
-
 
 # Class Utama
 class AplikasiPenumpang:
@@ -291,6 +302,32 @@ class AplikasiPenumpang:
                 f"Terbaik: {hasil['metode_terbaik']} | MAD Reg: {hasil['mad_regresi']:,.2f} | MAD MA-3: {hasil['mad_ma3']:,.2f}",
             )
 
+    def ramalkan_bulan(self):
+        print("\nPERAMALAN JUMLAH PENUMPANG BULAN KE-X")
+        try:
+            bulan_ke = int(input("Masukkan bulan ke berapa setelah data terakhir (misal 1 = bulan depan): ").strip())
+            if bulan_ke <= 0:
+                print("Angka bulan harus lebih besar dari 0.")
+                return
+        except ValueError:
+            print("Input harus berupa angka bulat.")
+            return
+
+        data_v, _ = validasi(self.nama_file)
+        hasil = ramalkan_bulan_ke(data_v, bulan_ke)
+        if not hasil:
+            print("Tidak ada data valid untuk meramalkan.")
+            return
+
+        print(f"Periode ke-{hasil['periode_target']} (Bulan ke-{hasil['bulan_ke']} ke depan)")
+        print(f"Perkiraan Penumpang : {hasil['prediksi']:,.2f}")
+        print(f"Kategori Permintaan : {hasil['kategori']}")
+
+        self.catat_riwayat(
+            "Peramalan Bulan",
+            f"Bulan ke-{hasil['bulan_ke']} (Per {hasil['periode_target']}) -> {hasil['prediksi']:,.2f} ({hasil['kategori']})",
+        )
+
     def tampilkan_riwayat_penggunaan(self):
         print("\nRIWAYAT PENGGUNAAN SISTEM")
         print(f"Pengguna Aktif : {self.pengguna_aktif} ({self.peran_aktif})")
@@ -314,14 +351,17 @@ class AplikasiPenumpang:
                 print("\n=== MENU UTAMA ===")
                 print("1. Jalankan Evaluasi Error Regresi vs Moving Average (3 Bulan)")
                 print("2. Lihat Riwayat Penggunaan")
+                print("3. Ramalkan Jumlah Penumpang Bulan Ke-X")
                 print("0. Keluar")
-                pilihan = input("Pilih menu (0/1/2): ").strip()
+                pilihan = input("Pilih menu (0/1/2/3): ").strip()
 
                 if pilihan == "1":
                     self.jalankan_evaluasi()
                 elif pilihan == "2":
                     self.catat_riwayat("Lihat Riwayat", "Membuka daftar riwayat penggunaan")
                     self.tampilkan_riwayat_penggunaan()
+                elif pilihan == "3":
+                    self.ramalkan_bulan()
                 elif pilihan == "0":
                     self.catat_riwayat("Logout / Keluar Sesi", f"Keluar dari akun '{self.pengguna_aktif}'")
                     print("\nAnda keluar dari sesi akun:", self.pengguna_aktif)
@@ -340,7 +380,6 @@ class AplikasiPenumpang:
                         print("Pilihan tidak valid, kembali ke Menu Utama.")
                 else:
                     print("Pilihan tidak valid.")
-
 
 # Pemanggil Fungsi
 if __name__ == "__main__":
