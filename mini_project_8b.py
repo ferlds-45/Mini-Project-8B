@@ -280,6 +280,7 @@ class AplikasiPenumpang:
                 peran_baru = input("Peran atau unit: ").strip()
                 if peran_baru == "":
                     peran_baru = "Pengguna"
+
                 if user_baru == "" or sandi_baru == "":
                     print("Username dan password tidak boleh kosong.")
                 elif user_baru in self.akun:
@@ -287,6 +288,8 @@ class AplikasiPenumpang:
                 else:
                     self.akun[user_baru] = {"sandi": sandi_baru, "peran": peran_baru}
                     self.pengguna_aktif = user_baru
+                    self.peran_aktif = peran_baru
+                    self.catat_riwayat("Registrasi Akun", f"Akun baru '{user_baru}' peran '{peran_baru}'")
                     print("Registrasi berhasil. Akun aktif:", user_baru)
                     break
 
@@ -295,6 +298,8 @@ class AplikasiPenumpang:
                 sandi = input("Password: ").strip()
                 if user in self.akun and self.akun[user]["sandi"] == sandi:
                     self.pengguna_aktif = user
+                    self.peran_aktif = self.akun[user]["peran"]
+                    self.catat_riwayat("Login", f"Masuk sebagai '{user}' ({self.peran_aktif})")
                     print("Login berhasil. Selamat datang,", user)
                     break
                 else:
@@ -303,65 +308,48 @@ class AplikasiPenumpang:
             else:
                 print("Pilihan tidak valid.")
 
-    def jalankan_perhitungan_utama(self, bulan_ke):
+    def jalankan_evaluasi(self):
         data_v, data_inv = validasi(self.nama_file)
-        if len(data_v) == 0:
-                print("Tidak ada data valid untuk diproses.")
-                return
-
-        tabel_eval, ringkasan, prediksi_val = proses_peramalan_output(
-            data_v, data_inv, bulan_ke
-        )
-        self.riwayat.append({
-            "pengguna": self.pengguna_aktif,
-            "bulan_ke": bulan_ke,
-            "prediksi": prediksi_val,
-            "ringkasan": ringkasan,
-        })
-        return tabel_eval, ringkasan
-
-    # Menu 1: Peramalan Penumpang
-    def menu_satu_peramalan(self):
-        print("\nMENU 1 PERAMALAN PENUMPANG")
-        try:
-            bulan_ke = int(
-                input("Masukkan Bulan ke Berapa Setelah Desember 2025 (Januari 2026 = 1): ").strip()
+        hasil = proses_evaluasi_dan_output(data_v, data_inv)
+        if hasil:
+            self.catat_riwayat(
+                "Evaluasi Error dan Kuota",
+                f"Terbaik: {hasil['metode_terbaik']} | MAD Reg: {hasil['mad_regresi']:,.2f} | MAD MA-3: {hasil['mad_ma3']:,.2f}",
             )
-            if bulan_ke <= 0:
-                print("Angka bulan harus lebih dari 0.")
-                return
-            self.jalankan_perhitungan_utama(bulan_ke)
-        except ValueError:
-            print("Input harus berupa angka bulat.")
 
-    # Menu 2: Riwayat Peramalan dan Statistik
-    def menu_dua_riwayat_dan_statistik(self):
-        print("\nMENU 2 RIWAYAT PERAMALAN DAN STATISTIK")
-        print("Pengguna aktif:", self.pengguna_aktif)
-        print("Jumlah riwayat prediksi:", len(self.riwayat))
-        for idx, item in enumerate(self.riwayat, start=1):
+    def tampilkan_riwayat_penggunaan(self):
+        print("\nRIWAYAT PENGGUNAAN SISTEM")
+        print(f"Pengguna Aktif : {self.pengguna_aktif} ({self.peran_aktif})")
+        print(f"Total Interaksi: {len(self.riwayat_penggunaan)}")
+        print("-" * 100)
+        if not self.riwayat_penggunaan:
+            print("Belum ada riwayat penggunaan.")
+            return
+        for idx, item in enumerate(self.riwayat_penggunaan, start=1):
             print(
-                f"{idx}. [{item['pengguna']}] Bulan ke-{item['bulan_ke']} -> "
-                f"Prediksi: {item['prediksi']:,.2f}"
+                f"{idx}. [{item['waktu']}] {item['pengguna']} ({item['peran']}) "
+                f"-> {item['aktivitas']} | {item['detail']}"
             )
 
     def mulai(self):
         while True:
             self.registrasi_atau_login()
-            self.jalankan_perhitungan_utama(1)
+            self.jalankan_evaluasi()
 
             while True:
                 print("\n=== MENU UTAMA ===")
-                print("1. Peramalan Jumlah Penumpang")
-                print("2. Riwayat Peramalan dan Statistik")
+                print("1. Jalankan Evaluasi Error Regresi vs Moving Average (3 Bulan)")
+                print("2. Lihat Riwayat Penggunaan")
                 print("0. Keluar")
                 pilihan = input("Pilih menu (0/1/2): ").strip()
 
                 if pilihan == "1":
-                    self.menu_satu_peramalan()
+                    self.jalankan_evaluasi()
                 elif pilihan == "2":
-                    self.menu_dua_riwayat_dan_statistik()
+                    self.catat_riwayat("Lihat Riwayat", "Membuka daftar riwayat penggunaan")
+                    self.tampilkan_riwayat_penggunaan()
                 elif pilihan == "0":
+                    self.catat_riwayat("Logout / Keluar Sesi", f"Keluar dari akun '{self.pengguna_aktif}'")
                     print("\nAnda keluar dari sesi akun:", self.pengguna_aktif)
                     print("1. Kembali ke Portal Registrasi / Login")
                     print("2. Tutup Program")
@@ -369,6 +357,7 @@ class AplikasiPenumpang:
 
                     if opsi_keluar == "1":
                         self.pengguna_aktif = ""
+                        self.peran_aktif = ""
                         break
                     elif opsi_keluar == "2":
                         print("Program selesai. Terima kasih!")
@@ -377,7 +366,6 @@ class AplikasiPenumpang:
                         print("Pilihan tidak valid, kembali ke Menu Utama.")
                 else:
                     print("Pilihan tidak valid.")
-
 
 # Pemanggil Fungsi
 if __name__ == "__main__":
