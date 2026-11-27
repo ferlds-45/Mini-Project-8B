@@ -1,6 +1,6 @@
 # Jejak Fluktuasi Penumpang Kereta Api Evaluasi Tingkat Permintaan Layanan Berbasis Python
 
-Program berbasis Python untuk mengevaluasi tingkat permintaan layanan penumpang kereta api melalui autentikasi pengguna(regritrasi dan login), pemodelan prediksi berbasis **statistika regresi**, serta identifikasi data berfluktuasi tinggi menggunakan **MAD (*Mean Absolute Deviation*)**.  Program ini dirancang untuk mengelola data penumpang kereta api dari _file_ CSV untuk memprediksi fluktasi penumpang di bulan mendatang dan mengevaluasi dan menidaklanjuti jumlah penumpang pada bulan-bulan sebelumnya. Program ini juga dirancang untuk regristrasi dan login untuk menjaga rahasia operasional aplikasi
+Program berbasis Python untuk mengevaluasi tingkat permintaan layanan penumpang kereta api melalui autentikasi pengguna(regritrasi dan login), pemodelan prediksi berbasis **statistika regresi**, serta identifikasi data berfluktuasi tinggi menggunakan **|EP| (*Absolute Error Percentage*)**.  Program ini dirancang untuk mengelola data penumpang kereta api dari _file_ CSV untuk memprediksi fluktasi penumpang di bulan mendatang dan mengevaluasi dan menidaklanjuti jumlah penumpang pada bulan-bulan sebelumnya. Program ini juga dirancang untuk regristrasi dan login untuk menjaga rahasia operasional aplikasi
 
 ## Struktur Repositori
 
@@ -19,8 +19,8 @@ Program berbasis Python untuk mengevaluasi tingkat permintaan layanan penumpang 
    - Mengolah data historis dari berkas CSV untuk membentuk persamaan regresi.
    - Digunakan untuk memperkirakan tren dan proyeksi tingkat permintaan layanan penumpang.
 
-3. **Deteksi Fluktuasi Tinggi dengan MAD (*Mean Absolute Deviation*)**
-   - Menghitung rata-rata deviasi absolut dari data terhadap nilai acuan/rata-rata untuk mengukur tingkat penyebaran data.
+3. **Deteksi Fluktuasi Tinggi dengan |EP| (*Absolute Percentage Error*)**
+   - Menghitung persentase _error_ berdasarkan selisih antara nilai aktual penumpang dengan hasil peramalan.
    - Memudahkan identifikasi titik atau periode data yang mengalami fluktuasi tinggi sehingga perlu perhatian lebih dalam evaluasi layanan.
 
 ## Cara Menjalankan Program
