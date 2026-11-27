@@ -160,13 +160,11 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
             "persen_error": persen_err,
             "abs_pe": abs_pe_val,
             "kategori": kategori,
-            "peringatan": peringatan,
-        })
+            "peringatan": peringatan, })
 
     print("\nTABEL EVALUASI ERROR")
     print(
-        "Periode | Tahun | Bulan | Aktual     | Regresi    | Selisih Reg | % Error  | |PE|     | Kategori | Peringatan"
-    )
+        "Periode | Tahun | Bulan | Aktual     | Regresi    | Selisih Reg | % Error  | |PE|     | Kategori | Peringatan")
     print("-" * 140)
     for row in tabel_evaluasi:
         print(
@@ -185,8 +183,8 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
         f"Hasil evaluasi regresi menghasilkan rata-rata |PE| sebesar {rata_abs_pe:.4f} "
         f"dengan rata-rata persentase error {rata_persen_error:.2f}%. Semakin mendekati 0%, "
         f"akurasi semakin baik; semakin tinggi persentase error, semakin genting penyesuaian "
-        f"kuota kursi sesuai kategori permintaan."
-    )
+        f"kuota kursi sesuai kategori permintaan.")
+    
     print("\nKESIMPULAN DAN SARAN KUOTA PENUMPANG:")
     print(kesimpulan)
 
@@ -290,8 +288,7 @@ class AplikasiFluktasiPenumpang:
 
         self.catat_riwayat(
             "Peramalan Bulan",
-            f"Bulan ke-{hasil['bulan_ke']} (Per {hasil['periode_target']}) -> {hasil['prediksi']:,.2f} ({hasil['kategori']})",
-        )
+            f"Bulan ke-{hasil['bulan_ke']} (Per {hasil['periode_target']}) -> {hasil['prediksi']:,.2f} ({hasil['kategori']})",)
 
     def tampilkan_riwayat_penggunaan(self):
         print("\nRIWAYAT PENGGUNAAN SISTEM")
@@ -304,8 +301,7 @@ class AplikasiFluktasiPenumpang:
         for idx, item in enumerate(self.riwayat_penggunaan, start=1):
             print(
                 f"{idx}. [{item['waktu']}] {item['pengguna']} ({item['peran']}) "
-                f"-> {item['aktivitas']} | {item['detail']}"
-            )
+                f"-> {item['aktivitas']} | {item['detail']}")
 
     def mulai(self):
         while True:
