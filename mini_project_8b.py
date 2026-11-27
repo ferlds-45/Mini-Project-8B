@@ -5,19 +5,6 @@ import statistics
 # Nama file CSV default
 FILE_CSV = "iheq5zumsgcil03ixtjf.csv"
 
-REFERENSI_ERROR = {
-    "Moving Average 3 Bulan": {
-        "MAD": 435.0,
-        "MSE": 317750.2,
-        "MAPE": 0.060121,
-    },
-    "Exponential Smoothing alpha=0.6": {
-        "MAD": 387.163,
-        "MSE": 261914.1,
-        "MAPE": 0.055349,
-    },
-}
-
 # Fungsi penyaring data
 def validasi(nama_file):
     data_v = []
@@ -61,13 +48,25 @@ def kategori_permintaan(jumlah, rata_rata):
     else:
         return "Tinggi"
 
-def saran_kuota_kursi(aktual, rata_rata, kategori):
-    if kategori == "Tinggi" or aktual > rata_rata * 1.15:
-        return "PERINGATAN: Jumlah penumpang melonjak! Tambah kuota kursi untuk mencukupi permintaan penumpang."
-    elif kategori == "Rendah" or aktual < rata_rata * 0.75:
-        return "SARAN: Permintaan penumpang rendah, sesuaikan kuota kursi agar kapasitas tidak berlebih."
+def peringatan_kuota_error(aktual, rata_rata, kategori, persen_error):
+    # Semakin mendekati 0% semakin baik; semakin tinggi % error semakin genting
+    if persen_error >= 25.0:
+        tingkat = "SANGAT GENTING"
+    elif persen_error >= 10.0:
+        tingkat = "GENTING"
+    elif persen_error > 0.0:
+        tingkat = "WASPADA"
     else:
-        return "AMAN: Permintaan penumpang stabil, pertahankan kuota kursi sesuai jadwal reguler."
+        tingkat = "OPTIMAL (0%)"
+
+    if kategori == "Tinggi" or aktual > rata_rata * 1.15:
+        aksi = "maka harus tambah kursi untuk mengantisipasi lonjakan penumpang"
+    elif kategori == "Rendah" or aktual < rata_rata * 0.75:
+        aksi = "maka sesuaikan/kurangi kuota kursi agar tidak terjadi kelebihan kapasitas"
+    else:
+        aksi = "maka pertahankan kuota kursi reguler"
+
+    return f"Peringatan [{tingkat}, error {persen_error:.2f}%]: berdasarkan persentase error, {aksi}."
 
 # Fungsi proses regresi, peramalan bulan ke-X, dan evaluasi error
 def hitung_regresi(x_data, y_data):
@@ -101,51 +100,30 @@ def ramalkan_bulan_ke(data_valid, bulan_ke):
     }
 
 def evaluasi_error_regresi(y_data, a, b):
-    abs_errors = []
-    sq_errors = []
-    pct_errors = []
     prediksi_list = []
+    selisih_list = []
+    pe_list = []
+    persen_error_list = []
 
     for i in range(len(y_data)):
         periode = float(i + 1)
         aktual = y_data[i]
         pred = a + b * periode
+        selisih = aktual - pred
+        pe = (abs(selisih) / aktual) if aktual != 0 else 0.0
+        persen_error = pe * 100.0
+
         prediksi_list.append(pred)
+        selisih_list.append(selisih)
+        pe_list.append(pe)
+        persen_error_list.append(persen_error)
 
-        err_abs = abs(aktual - pred)
-        abs_errors.append(err_abs)
-        sq_errors.append((aktual - pred) ** 2)
-        if aktual != 0:
-            pct_errors.append(err_abs / aktual)
+    # Nilai MAD ditentukan sendiri dari rata-rata selisih absolut regresi
+    mad = statistics.mean(abs(s) for s in selisih_list) if selisih_list else 0.0
+    rata_persen_error = statistics.mean(persen_error_list) if persen_error_list else 0.0
+    rata_pe = statistics.mean(pe_list) if pe_list else 0.0
 
-    mad = statistics.mean(abs_errors) if abs_errors else 0.0
-    mse = statistics.mean(sq_errors) if sq_errors else 0.0
-    mape = statistics.mean(pct_errors) if pct_errors else 0.0
-    return prediksi_list, mad, mse, mape
-
-def evaluasi_moving_average_3_bulan(y_data):
-    forecast_list = [None] * len(y_data)
-    abs_errors = []
-    sq_errors = []
-    pct_errors = []
-
-    for i in range(len(y_data)):
-        if i >= 3:
-            jumlah_3_bulan = y_data[i - 3] + y_data[i - 2] + y_data[i - 1]
-            ma_3 = jumlah_3_bulan / 3.0
-            forecast_list[i] = ma_3
-
-            aktual = y_data[i]
-            err_abs = abs(aktual - ma_3)
-            abs_errors.append(err_abs)
-            sq_errors.append((aktual - ma_3) ** 2)
-            if aktual != 0:
-                pct_errors.append(err_abs / aktual)
-
-    mad = statistics.mean(abs_errors) if abs_errors else 0.0
-    mse = statistics.mean(sq_errors) if sq_errors else 0.0
-    mape = statistics.mean(pct_errors) if pct_errors else 0.0
-    return forecast_list, mad, mse, mape
+    return prediksi_list, selisih_list, pe_list, persen_error_list, mad, rata_persen_error, rata_pe
 
 def proses_evaluasi_dan_output(data_valid, data_invalid):
     x_data = [float(i + 1) for i in range(len(data_valid))]
@@ -156,18 +134,25 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
         return None
 
     _, mean_y, a, b = hitung_regresi(x_data, y_data)
-    pred_regresi, mad_reg, mse_reg, mape_reg = evaluasi_error_regresi(y_data, a, b)
-    ma3_forecast, mad_ma3, mse_ma3, mape_ma3 = evaluasi_moving_average_3_bulan(y_data)
+    (
+        pred_regresi,
+        selisih_list,
+        pe_list,
+        persen_error_list,
+        mad,
+        rata_persen_error,
+        rata_pe,
+    ) = evaluasi_error_regresi(y_data, a, b)
 
     tabel_evaluasi = []
     for i in range(len(data_valid)):
         aktual = y_data[i]
         reg_val = pred_regresi[i]
-        ma_val = ma3_forecast[i]
-        selisih_reg = aktual - reg_val
-        selisih_ma = (aktual - ma_val) if ma_val is not None else None
+        selisih_reg = selisih_list[i]
+        pe_val = pe_list[i]
+        persen_err = persen_error_list[i]
         kategori = kategori_permintaan(aktual, mean_y)
-        peringatan = saran_kuota_kursi(aktual, mean_y, kategori)
+        peringatan = peringatan_kuota_error(aktual, mean_y, kategori, persen_err)
 
         tabel_evaluasi.append({
             "periode": i + 1,
@@ -175,58 +160,47 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
             "bulan": data_valid[i]["Bulan"],
             "aktual": aktual,
             "regresi": reg_val,
-            "selisih_reg": selisih_reg,
-            "ma_3": ma_val,
-            "selisih_ma": selisih_ma,
+            "selisih_reg_mad": selisih_reg,
+            "persen_error": persen_err,
+            "pe": pe_val,
             "kategori": kategori,
-            "peringatan_kuota": peringatan,
+            "peringatan": peringatan,
         })
 
     print("\nTABEL EVALUASI ERROR")
     print(
-        "Per | Tahun | Bulan | Aktual     | Regresi    | MA-3 Bln   | Kategori | Peringatan / Saran Kuota Kursi"
+        "Periode | Tahun | Bulan | Aktual     | Regresi    | Selisih Reg (MAD) | % Error  | [PE]     | Kategori | Peringatan"
     )
-    print("-" * 125)
+    print("-" * 145)
     for row in tabel_evaluasi:
-        ma_str = f"{row['ma_3']:>10,.2f}" if row["ma_3"] is not None else f"{'N/A':>10}"
+        status_mad = "<=MAD" if abs(row["selisih_reg_mad"]) <= mad else ">MAD"
+        selisih_tampil = f"{row['selisih_reg_mad']:>+9,.2f} ({status_mad})"
         print(
-            f"{row['periode']:<3} | {row['tahun']:<5} | {row['bulan']:<5} | "
+            f"{row['periode']:<7} | {row['tahun']:<5} | {row['bulan']:<5} | "
             f"{row['aktual']:>10,.0f} | {row['regresi']:>10,.2f} | "
-            f"{ma_str} | {row['kategori']:<8} | {row['peringatan_kuota']}"
+            f"{selisih_tampil:<17} | {row['persen_error']:>7.2f}% | "
+            f"{row['pe']:>8.4f} | {row['kategori']:<8} | {row['peringatan']}"
         )
 
-    metode_terbaik = "Regresi Linear" if mad_reg < mad_ma3 else "Moving Average 3 Bulan"
-
-    print("\nRINGKASAN EVALUASI ERROR (MAD, MSE, MAPE)")
+    print("\nRINGKASAN EVALUASI ERROR REGRESI")
     print(f"Data Valid: {len(data_valid)} | Data Invalid: {data_invalid} | Mean Penumpang: {mean_y:,.2f}")
     print(f"Persamaan Regresi: Y = {a:,.4f} + ({b:,.4f})X")
-    print("-" * 88)
-    print(f"{'Metode Evaluasi':<42} | {'MAD':>12} | {'MSE':>14} | {'MAPE':>10}")
-    print("-" * 88)
-    print(f"{'Regresi Linear':<42} | {mad_reg:>12,.3f} | {mse_reg:>14,.2f} | {mape_reg:>10.6f}")
-    print(f"{'Moving Average 3 Bulan':<42} | {mad_ma3:>12,.3f} | {mse_ma3:>14,.2f} | {mape_ma3:>10.6f}")
-    for nama_metode, metrik in REFERENSI_ERROR.items():
-        print(
-            f"{nama_metode:<42} | {metrik['MAD']:>12,.3f} | "
-            f"{metrik['MSE']:>14,.2f} | {metrik['MAPE']:>10.6f}"
-        )
-    print("-" * 88)
+    print(f"Nilai MAD (ditentukan dari data): {mad:,.3f}")
+    print(f"Rata-rata Persentase Error: {rata_persen_error:.2f}% | Rata-rata [PE]: {rata_pe:.4f}")
 
     kesimpulan = (
-        f"Hasil evaluasi error menunjukkan {metode_terbaik} memiliki MAD lebih kecil pada data ini "
-        f"(MAD Regresi: {mad_reg:,.3f} dibandingkan MAD Moving Average 3 Bulan: {mad_ma3:,.3f}). "
-        f"Sebagai perbandingan literatur, Moving Average 3 bulan memiliki MAD 435,000 dan "
-        f"Exponential Smoothing (alpha=0,6) memiliki MAD 387,163. "
-        f"Gunakan baris berstatus 'Tinggi' sebagai acuan penambahan kuota kursi dan 'Rendah' untuk penyesuaian kapasitas."
+        f"Hasil evaluasi regresi menghasilkan nilai MAD sebesar {mad:,.3f} dengan rata-rata persentase error "
+        f"{rata_persen_error:.2f}% (rata-rata [PE] {rata_pe:.4f}). Semakin mendekati 0%, akurasi semakin baik; "
+        f"semakin tinggi persentase error, semakin genting penyesuaian kuota kursi sesuai kategori permintaan."
     )
     print("\nKESIMPULAN DAN SARAN KUOTA PENUMPANG:")
     print(kesimpulan)
 
     return {
         "tabel": tabel_evaluasi,
-        "mad_regresi": mad_reg,
-        "mad_ma3": mad_ma3,
-        "metode_terbaik": metode_terbaik,
+        "mad": mad,
+        "rata_persen_error": rata_persen_error,
+        "rata_pe": rata_pe,
         "kesimpulan": kesimpulan,
     }
 
@@ -237,6 +211,8 @@ class AplikasiFluktasiPenumpang:
         self.akun = {
             "admin": {"sandi": "1234", "peran": "Pengelola"},
         }
+        # Menyimpan akun yang sudah pernah login agar tidak perlu registrasi ulang
+        self.sudah_pernah_login = set()
         self.pengguna_aktif = ""
         self.peran_aktif = ""
         self.riwayat_penggunaan = []
@@ -255,6 +231,9 @@ class AplikasiFluktasiPenumpang:
     def registrasi_atau_login(self):
         while True:
             print("\nPORTAL REGISTRASI DAN LOGIN")
+            if self.sudah_pernah_login:
+                daftar_tersimpan = ", ".join(sorted(self.sudah_pernah_login))
+                print(f"Akun tersimpan (sudah pernah login): {daftar_tersimpan}")
             print("1. Registrasi Akun Baru")
             print("2. Login")
             pilih = input("Pilih (1/2): ").strip()
@@ -268,10 +247,13 @@ class AplikasiFluktasiPenumpang:
 
                 if user_baru == "" or sandi_baru == "":
                     print("Username dan password tidak boleh kosong.")
+                elif user_baru in self.sudah_pernah_login:
+                    print("Akun ini sudah pernah login sebelumnya, silakan langsung Login tanpa registrasi ulang.")
                 elif user_baru in self.akun:
                     print("Username sudah terdaftar.")
                 else:
                     self.akun[user_baru] = {"sandi": sandi_baru, "peran": peran_baru}
+                    self.sudah_pernah_login.add(user_baru)
                     self.pengguna_aktif = user_baru
                     self.peran_aktif = peran_baru
                     self.catat_riwayat("Registrasi Akun", f"Akun baru '{user_baru}' peran '{peran_baru}'")
@@ -280,8 +262,17 @@ class AplikasiFluktasiPenumpang:
 
             elif pilih == "2":
                 user = input("Username: ").strip()
+                if user in self.sudah_pernah_login and user in self.akun:
+                    # Akun yang sudah pernah login langsung masuk tanpa registrasi ulang
+                    self.pengguna_aktif = user
+                    self.peran_aktif = self.akun[user]["peran"]
+                    self.catat_riwayat("Login Otomatis (Tersimpan)", f"Masuk sebagai '{user}' ({self.peran_aktif})")
+                    print(f"Akun '{user}' sudah tersimpan (pernah login). Selamat datang kembali!")
+                    break
+
                 sandi = input("Password: ").strip()
                 if user in self.akun and self.akun[user]["sandi"] == sandi:
+                    self.sudah_pernah_login.add(user)
                     self.pengguna_aktif = user
                     self.peran_aktif = self.akun[user]["peran"]
                     self.catat_riwayat("Login", f"Masuk sebagai '{user}' ({self.peran_aktif})")
@@ -299,7 +290,7 @@ class AplikasiFluktasiPenumpang:
         if hasil:
             self.catat_riwayat(
                 "Evaluasi Error dan Kuota",
-                f"Terbaik: {hasil['metode_terbaik']} | MAD Reg: {hasil['mad_regresi']:,.2f} | MAD MA-3: {hasil['mad_ma3']:,.2f}",
+                f"MAD: {hasil['mad']:,.3f} | Rata-rata % Error: {hasil['rata_persen_error']:.2f}% | Rata-rata [PE]: {hasil['rata_pe']:.4f}",
             )
 
     def ramalkan_bulan(self):
@@ -348,7 +339,7 @@ class AplikasiFluktasiPenumpang:
 
             while True:
                 print("\n=== MENU UTAMA ===")
-                print("1. Jalankan Evaluasi Error Regresi vs Moving Average (3 Bulan)")
+                print("1. Jalankan Evaluasi Error Regresi")
                 print("2. Lihat Riwayat Penggunaan")
                 print("3. Ramalkan Jumlah Penumpang Bulan Ke-X")
                 print("0. Keluar")
