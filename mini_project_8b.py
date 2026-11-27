@@ -5,6 +5,7 @@ import statistics
 # Nama file CSV default
 FILE_CSV = "iheq5zumsgcil03ixtjf.csv"
 
+
 # Fungsi penyaring data
 def validasi(nama_file):
     data_v = []
@@ -40,6 +41,7 @@ def validasi(nama_file):
         print("File Tidak Ditemukan : Pastikan Penulisan Nama File CSV Sudah Benar!")
     return data_v, data_inv
 
+
 def kategori_permintaan(jumlah, rata_rata):
     if jumlah < rata_rata * 0.75:
         return "Rendah"
@@ -47,6 +49,7 @@ def kategori_permintaan(jumlah, rata_rata):
         return "Sedang"
     else:
         return "Tinggi"
+
 
 def peringatan_kuota_error(aktual, rata_rata, kategori, persen_error):
     if persen_error >= 25.0:
@@ -67,6 +70,7 @@ def peringatan_kuota_error(aktual, rata_rata, kategori, persen_error):
 
     return f"Peringatan [{tingkat}, error {persen_error:.2f}%]: berdasarkan persentase error, {aksi}."
 
+
 # Fungsi proses regresi, peramalan bulan ke-X, dan evaluasi error
 def hitung_regresi(x_data, y_data):
     mean_x = statistics.mean(x_data)
@@ -78,6 +82,7 @@ def hitung_regresi(x_data, y_data):
     b = (atas / bawah) if bawah != 0 else 0.0
     a = mean_y - (b * mean_x)
     return mean_x, mean_y, a, b
+
 
 def ramalkan_bulan_ke(data_valid, bulan_ke):
     x_data = [float(i + 1) for i in range(len(data_valid))]
@@ -97,6 +102,7 @@ def ramalkan_bulan_ke(data_valid, bulan_ke):
         "prediksi": prediksi,
         "kategori": kategori,
     }
+
 
 def evaluasi_error_regresi(y_data, a, b):
     prediksi_list = []
@@ -121,6 +127,7 @@ def evaluasi_error_regresi(y_data, a, b):
     rata_abs_pe = statistics.mean(abs_pe_list) if abs_pe_list else 0.0
 
     return prediksi_list, selisih_list, abs_pe_list, persen_error_list, rata_persen_error, rata_abs_pe
+
 
 def proses_evaluasi_dan_output(data_valid, data_invalid):
     x_data = [float(i + 1) for i in range(len(data_valid))]
@@ -160,19 +167,24 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
             "persen_error": persen_err,
             "abs_pe": abs_pe_val,
             "kategori": kategori,
-            "peringatan": peringatan, })
+            "peringatan": peringatan,
+        })
 
     print("\nTABEL EVALUASI ERROR")
-    print(
-        "Periode | Tahun | Bulan | Aktual     | Regresi    | Selisih Reg | % Error  | |PE|     | Kategori | Peringatan")
-    print("-" * 140)
+    print("Periode | Tahun | Bulan | Aktual     | Regresi    | Selisih Reg | % Error  | |PE|     | Kategori")
+    print("-" * 105)
     for row in tabel_evaluasi:
         print(
             f"{row['periode']:<7} | {row['tahun']:<5} | {row['bulan']:<5} | "
             f"{row['aktual']:>10,.0f} | {row['regresi']:>10,.2f} | "
             f"{row['selisih_reg']:>+11,.2f} | {row['persen_error']:>7.2f}% | "
-            f"{row['abs_pe']:>8.4f} | {row['kategori']:<8} | {row['peringatan']}"
+            f"{row['abs_pe']:>8.4f} | {row['kategori']:<8}"
         )
+
+    print("\nPENJELASAN & SARAN KATEGORI PERMINTAAN:")
+    print("- Tinggi (> 1,15 x rata-rata): Jumlah penumpang berada di atas batas atas rata-rata (lonjakan permintaan); perlu evaluasi ketersediaan kursi atau jadwal layanan agar kapasitas tetap mencukupi.")
+    print("- Sedang (0,75 x s.d. 1,15 x rata-rata): Jumlah penumpang berada pada rentang normal di sekitar rata-rata; kondisi permintaan relatif stabil sehingga layanan dapat berjalan normal.")
+    print("- Rendah (< 0,75 x rata-rata): Jumlah penumpang berada di bawah batas bawah rata-rata (penurunan permintaan); perlu peninjauan kapasitas operasional serta faktor penyebab penurunan penumpang.")
 
     print("\nRINGKASAN EVALUASI ERROR REGRESI")
     print(f"Data Valid: {len(data_valid)} | Data Invalid: {data_invalid} | Mean Penumpang: {mean_y:,.2f}")
@@ -183,8 +195,9 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
         f"Hasil evaluasi regresi menghasilkan rata-rata |PE| sebesar {rata_abs_pe:.4f} "
         f"dengan rata-rata persentase error {rata_persen_error:.2f}%. Semakin mendekati 0%, "
         f"akurasi semakin baik; semakin tinggi persentase error, semakin genting penyesuaian "
-        f"kuota kursi sesuai kategori permintaan.")
-    
+        f"kuota kursi sesuai kategori permintaan."
+    )
+
     print("\nKESIMPULAN DAN SARAN KUOTA PENUMPANG:")
     print(kesimpulan)
 
@@ -194,6 +207,7 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
         "rata_abs_pe": rata_abs_pe,
         "kesimpulan": kesimpulan,
     }
+
 
 # Class Utama
 class AplikasiFluktasiPenumpang:
@@ -288,7 +302,8 @@ class AplikasiFluktasiPenumpang:
 
         self.catat_riwayat(
             "Peramalan Bulan",
-            f"Bulan ke-{hasil['bulan_ke']} (Per {hasil['periode_target']}) -> {hasil['prediksi']:,.2f} ({hasil['kategori']})",)
+            f"Bulan ke-{hasil['bulan_ke']} (Per {hasil['periode_target']}) -> {hasil['prediksi']:,.2f} ({hasil['kategori']})",
+        )
 
     def tampilkan_riwayat_penggunaan(self):
         print("\nRIWAYAT PENGGUNAAN SISTEM")
@@ -301,7 +316,8 @@ class AplikasiFluktasiPenumpang:
         for idx, item in enumerate(self.riwayat_penggunaan, start=1):
             print(
                 f"{idx}. [{item['waktu']}] {item['pengguna']} ({item['peran']}) "
-                f"-> {item['aktivitas']} | {item['detail']}")
+                f"-> {item['aktivitas']} | {item['detail']}"
+            )
 
     def mulai(self):
         while True:
@@ -340,6 +356,7 @@ class AplikasiFluktasiPenumpang:
                         print("Pilihan tidak valid, kembali ke Menu Utama.")
                 else:
                     print("Pilihan tidak valid.")
+
 
 # Pemanggil Fungsi
 if __name__ == "__main__":
