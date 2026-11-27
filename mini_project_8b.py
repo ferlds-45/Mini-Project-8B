@@ -49,7 +49,6 @@ def kategori_permintaan(jumlah, rata_rata):
         return "Tinggi"
 
 def peringatan_kuota_error(aktual, rata_rata, kategori, persen_error):
-    # Semakin mendekati 0% semakin baik; semakin tinggi % error semakin genting
     if persen_error >= 25.0:
         tingkat = "SANGAT GENTING"
     elif persen_error >= 10.0:
@@ -102,7 +101,7 @@ def ramalkan_bulan_ke(data_valid, bulan_ke):
 def evaluasi_error_regresi(y_data, a, b):
     prediksi_list = []
     selisih_list = []
-    pe_list = []
+    abs_pe_list = []
     persen_error_list = []
 
     for i in range(len(y_data)):
@@ -110,20 +109,18 @@ def evaluasi_error_regresi(y_data, a, b):
         aktual = y_data[i]
         pred = a + b * periode
         selisih = aktual - pred
-        pe = (abs(selisih) / aktual) if aktual != 0 else 0.0
-        persen_error = pe * 100.0
+        abs_pe = (abs(selisih) / aktual) if aktual != 0 else 0.0
+        persen_error = abs_pe * 100.0
 
         prediksi_list.append(pred)
         selisih_list.append(selisih)
-        pe_list.append(pe)
+        abs_pe_list.append(abs_pe)
         persen_error_list.append(persen_error)
 
-    # Nilai MAD ditentukan sendiri dari rata-rata selisih absolut regresi
-    mad = statistics.mean(abs(s) for s in selisih_list) if selisih_list else 0.0
     rata_persen_error = statistics.mean(persen_error_list) if persen_error_list else 0.0
-    rata_pe = statistics.mean(pe_list) if pe_list else 0.0
+    rata_abs_pe = statistics.mean(abs_pe_list) if abs_pe_list else 0.0
 
-    return prediksi_list, selisih_list, pe_list, persen_error_list, mad, rata_persen_error, rata_pe
+    return prediksi_list, selisih_list, abs_pe_list, persen_error_list, rata_persen_error, rata_abs_pe
 
 def proses_evaluasi_dan_output(data_valid, data_invalid):
     x_data = [float(i + 1) for i in range(len(data_valid))]
@@ -137,11 +134,10 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
     (
         pred_regresi,
         selisih_list,
-        pe_list,
+        abs_pe_list,
         persen_error_list,
-        mad,
         rata_persen_error,
-        rata_pe,
+        rata_abs_pe,
     ) = evaluasi_error_regresi(y_data, a, b)
 
     tabel_evaluasi = []
@@ -149,7 +145,7 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
         aktual = y_data[i]
         reg_val = pred_regresi[i]
         selisih_reg = selisih_list[i]
-        pe_val = pe_list[i]
+        abs_pe_val = abs_pe_list[i]
         persen_err = persen_error_list[i]
         kategori = kategori_permintaan(aktual, mean_y)
         peringatan = peringatan_kuota_error(aktual, mean_y, kategori, persen_err)
@@ -160,47 +156,44 @@ def proses_evaluasi_dan_output(data_valid, data_invalid):
             "bulan": data_valid[i]["Bulan"],
             "aktual": aktual,
             "regresi": reg_val,
-            "selisih_reg_mad": selisih_reg,
+            "selisih_reg": selisih_reg,
             "persen_error": persen_err,
-            "pe": pe_val,
+            "abs_pe": abs_pe_val,
             "kategori": kategori,
             "peringatan": peringatan,
         })
 
     print("\nTABEL EVALUASI ERROR")
     print(
-        "Periode | Tahun | Bulan | Aktual     | Regresi    | Selisih Reg (MAD) | % Error  | [PE]     | Kategori | Peringatan"
+        "Periode | Tahun | Bulan | Aktual     | Regresi    | Selisih Reg | % Error  | |PE|     | Kategori | Peringatan"
     )
-    print("-" * 145)
+    print("-" * 140)
     for row in tabel_evaluasi:
-        status_mad = "<=MAD" if abs(row["selisih_reg_mad"]) <= mad else ">MAD"
-        selisih_tampil = f"{row['selisih_reg_mad']:>+9,.2f} ({status_mad})"
         print(
             f"{row['periode']:<7} | {row['tahun']:<5} | {row['bulan']:<5} | "
             f"{row['aktual']:>10,.0f} | {row['regresi']:>10,.2f} | "
-            f"{selisih_tampil:<17} | {row['persen_error']:>7.2f}% | "
-            f"{row['pe']:>8.4f} | {row['kategori']:<8} | {row['peringatan']}"
+            f"{row['selisih_reg']:>+11,.2f} | {row['persen_error']:>7.2f}% | "
+            f"{row['abs_pe']:>8.4f} | {row['kategori']:<8} | {row['peringatan']}"
         )
 
     print("\nRINGKASAN EVALUASI ERROR REGRESI")
     print(f"Data Valid: {len(data_valid)} | Data Invalid: {data_invalid} | Mean Penumpang: {mean_y:,.2f}")
     print(f"Persamaan Regresi: Y = {a:,.4f} + ({b:,.4f})X")
-    print(f"Nilai MAD (ditentukan dari data): {mad:,.3f}")
-    print(f"Rata-rata Persentase Error: {rata_persen_error:.2f}% | Rata-rata [PE]: {rata_pe:.4f}")
+    print(f"Rata-rata Persentase Error: {rata_persen_error:.2f}% | Rata-rata |PE|: {rata_abs_pe:.4f}")
 
     kesimpulan = (
-        f"Hasil evaluasi regresi menghasilkan nilai MAD sebesar {mad:,.3f} dengan rata-rata persentase error "
-        f"{rata_persen_error:.2f}% (rata-rata [PE] {rata_pe:.4f}). Semakin mendekati 0%, akurasi semakin baik; "
-        f"semakin tinggi persentase error, semakin genting penyesuaian kuota kursi sesuai kategori permintaan."
+        f"Hasil evaluasi regresi menghasilkan rata-rata |PE| sebesar {rata_abs_pe:.4f} "
+        f"dengan rata-rata persentase error {rata_persen_error:.2f}%. Semakin mendekati 0%, "
+        f"akurasi semakin baik; semakin tinggi persentase error, semakin genting penyesuaian "
+        f"kuota kursi sesuai kategori permintaan."
     )
     print("\nKESIMPULAN DAN SARAN KUOTA PENUMPANG:")
     print(kesimpulan)
 
     return {
         "tabel": tabel_evaluasi,
-        "mad": mad,
         "rata_persen_error": rata_persen_error,
-        "rata_pe": rata_pe,
+        "rata_abs_pe": rata_abs_pe,
         "kesimpulan": kesimpulan,
     }
 
@@ -290,7 +283,7 @@ class AplikasiFluktasiPenumpang:
         if hasil:
             self.catat_riwayat(
                 "Evaluasi Error dan Kuota",
-                f"MAD: {hasil['mad']:,.3f} | Rata-rata % Error: {hasil['rata_persen_error']:.2f}% | Rata-rata [PE]: {hasil['rata_pe']:.4f}",
+                f"Rata-rata |PE|: {hasil['rata_abs_pe']:.4f} | Rata-rata % Error: {hasil['rata_persen_error']:.2f}%",
             )
 
     def ramalkan_bulan(self):
