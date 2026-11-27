@@ -204,8 +204,6 @@ class AplikasiFluktasiPenumpang:
         self.akun = {
             "admin": {"sandi": "1234", "peran": "Pengelola"},
         }
-        # Menyimpan akun yang sudah pernah login agar tidak perlu registrasi ulang
-        self.sudah_pernah_login = set()
         self.pengguna_aktif = ""
         self.peran_aktif = ""
         self.riwayat_penggunaan = []
@@ -220,52 +218,35 @@ class AplikasiFluktasiPenumpang:
             "detail": detail,
         })
 
-    # Portal Registrasi dan Login
     def registrasi_atau_login(self):
         while True:
-            print("\nPORTAL REGISTRASI DAN LOGIN")
-            if self.sudah_pernah_login:
-                daftar_tersimpan = ", ".join(sorted(self.sudah_pernah_login))
-                print(f"Akun tersimpan (sudah pernah login): {daftar_tersimpan}")
-            print("1. Registrasi Akun Baru")
+            print("\nREGISTRASI / LOGIN")
+            print("1. Registrasi")
             print("2. Login")
             pilih = input("Pilih (1/2): ").strip()
 
             if pilih == "1":
-                user_baru = input("Buat username baru: ").strip()
-                sandi_baru = input("Buat password baru: ").strip()
-                peran_baru = input("Peran atau unit: ").strip()
-                if peran_baru == "":
-                    peran_baru = "Pengguna"
+                user_baru = input("Username baru: ").strip()
+                sandi_baru = input("Password baru: ").strip()
+                peran_baru = input("Peran: ").strip()
 
                 if user_baru == "" or sandi_baru == "":
                     print("Username dan password tidak boleh kosong.")
-                elif user_baru in self.sudah_pernah_login:
-                    print("Akun ini sudah pernah login sebelumnya, silakan langsung Login tanpa registrasi ulang.")
                 elif user_baru in self.akun:
                     print("Username sudah terdaftar.")
                 else:
                     self.akun[user_baru] = {"sandi": sandi_baru, "peran": peran_baru}
-                    self.sudah_pernah_login.add(user_baru)
                     self.pengguna_aktif = user_baru
                     self.peran_aktif = peran_baru
-                    self.catat_riwayat("Registrasi Akun", f"Akun baru '{user_baru}' peran '{peran_baru}'")
-                    print("Registrasi berhasil. Akun aktif:", user_baru)
+                    self.catat_riwayat("Registrasi", f"Akun '{user_baru}' ({peran_baru})")
+                    print("Registrasi berhasil. Selamat datang,", user_baru)
                     break
 
             elif pilih == "2":
                 user = input("Username: ").strip()
-                if user in self.sudah_pernah_login and user in self.akun:
-                    # Akun yang sudah pernah login langsung masuk tanpa registrasi ulang
-                    self.pengguna_aktif = user
-                    self.peran_aktif = self.akun[user]["peran"]
-                    self.catat_riwayat("Login Otomatis (Tersimpan)", f"Masuk sebagai '{user}' ({self.peran_aktif})")
-                    print(f"Akun '{user}' sudah tersimpan (pernah login). Selamat datang kembali!")
-                    break
-
                 sandi = input("Password: ").strip()
+
                 if user in self.akun and self.akun[user]["sandi"] == sandi:
-                    self.sudah_pernah_login.add(user)
                     self.pengguna_aktif = user
                     self.peran_aktif = self.akun[user]["peran"]
                     self.catat_riwayat("Login", f"Masuk sebagai '{user}' ({self.peran_aktif})")
@@ -287,7 +268,7 @@ class AplikasiFluktasiPenumpang:
             )
 
     def ramalkan_bulan(self):
-        print("\nPERAMALAN JUMLAH PENUMPANG BULAN KE-X")
+        print("\nPERAMALAN JUMLAH PENUMPANG BULAN")
         try:
             bulan_ke = int(input("Masukkan bulan ke berapa setelah data terakhir (misal 1 = bulan depan): ").strip())
             if bulan_ke <= 0:
@@ -331,7 +312,7 @@ class AplikasiFluktasiPenumpang:
             self.registrasi_atau_login()
 
             while True:
-                print("\n=== MENU UTAMA ===")
+                print("\n-- MENU UTAMA --")
                 print("1. Jalankan Evaluasi Error Regresi")
                 print("2. Lihat Riwayat Penggunaan")
                 print("3. Ramalkan Jumlah Penumpang Bulan Ke-X")
